@@ -9,7 +9,9 @@ def cli():
 
 
 @cli.command()
-@click.option('--force', is_flag=True, help='Force setup even if already initialized')
+@click.option('--force',
+              is_flag=True,
+              help='Force setup even if already initialized')
 def setup(force):
     """Set up development environment."""
     setup_cmd(force=force)

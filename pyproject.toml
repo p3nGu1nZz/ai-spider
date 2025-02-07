@@ -24,7 +24,12 @@ classifiers = [
     "Topic :: Scientific/Engineering :: Artificial Intelligence",
     "Topic :: Games/Entertainment",
 ]
-dependencies = ["rich>=10.0.0", "colorama>=0.4.4", "click>=8.0.0"]
+dependencies = [
+    "rich>=10.0.0",
+    "colorama>=0.4.4",
+    "click>=8.0.0",
+    "GitPython>=3.1.40",
+]
 
 [project.optional-dependencies]
 dev = [

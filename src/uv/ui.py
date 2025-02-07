@@ -79,10 +79,11 @@ class RichUI:
             self._console.clear()
             self._console.print(
                 RichPanel(text,
-                         expand=True,
-                         border_style="blue",
-                         padding=(1, 2),
-                         title="🎮 AI Spider Game Setup"))
+                          expand=True,
+                          border_style="blue",
+                          padding=(1, 2),
+                          title="🎮 AI Spider Game Setup",
+                          title_align="left"))
         else:
             # For non-rich environments, try to clear using ANSI
             print("\033[2J\033[H", end="")
@@ -104,15 +105,19 @@ class RichUI:
     def progress(self) -> Generator[Progress, None, None]:
         """Create progress context with spinner and text."""
         if HAS_RICH and RichProgress and RichSpinner and RichText:
+            from rich.progress import BarColumn, TaskProgressColumn
+
             progress = RichProgress(
                 RichSpinner("dots"),
-                RichText("[progress.description]{task.description}"),
-                RichProgress.get_default_columns()[2],
-                RichText("[purple]{task.completed:,}/{task.total:,} files[/purple]"),
+                RichText("[progress.description]{task.description:<30}"),
+                BarColumn(bar_width=None),
+                TaskProgressColumn(),
+                RichText(
+                    "[purple]{task.completed:>7,}/{task.total:,} files[/purple]"
+                ),
                 console=self._console,
                 expand=True,
-                transient=True
-            )
+                transient=True)
             with progress:
                 yield Progress(progress=progress)
         else:
@@ -132,9 +137,11 @@ class RichUI:
                 'visible': True
             }
             # Only add other kwargs that aren't already defined
-            task_kwargs.update({k:v for k,v in kwargs.items() 
-                              if k not in task_kwargs})
-            
+            task_kwargs.update({
+                k: v
+                for k, v in kwargs.items() if k not in task_kwargs
+            })
+
             task = progress.progress.add_task(**task_kwargs)
             progress.task = task
             return progress
