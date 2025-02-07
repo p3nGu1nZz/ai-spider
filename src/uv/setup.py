@@ -58,6 +58,25 @@ def _install_pytorch(ui: RichUI) -> bool:
         return False
 
 
+def _install_grpc(ui: RichUI) -> bool:
+    """Install GRPC libraries, particularly important for macOS."""
+    if sys.platform != "darwin":  # Only needed for macOS
+        return True
+    
+    ui.print_success("📦 Installing GRPC libraries...")
+    try:
+        process = subprocess.run(
+            ["uv", "pip", "install", "grpcio"],
+            capture_output=True,
+            text=True
+        )
+        ui.print_success("✨ GRPC libraries installed successfully")
+        return True
+    except subprocess.CalledProcessError as e:
+        ui.print_error(f"Failed to install GRPC: {e.stderr if e.stderr else str(e)}")
+        return False
+
+
 def install_dependencies() -> bool:
     """Install required packages using UV."""
     try:
@@ -93,6 +112,10 @@ def main(force: bool = False) -> int:
 
     # Install PyTorch with CUDA
     if not _install_pytorch(ui):
+        return 1
+
+    # Install GRPC (important for macOS)
+    if not _install_grpc(ui):
         return 1
 
     # Activate venv if it exists

@@ -2,6 +2,8 @@
   "dependencies": {
     "com.unity.collab-proxy": "2.6.0",
     "com.unity.feature.development": "1.0.2",
+    "com.unity.ml-agents": "file:C:/Users/3nigma/source/repos/spider/ml-agents/com.unity.ml-agents",
+    "com.unity.ml-agents.extensions": "file:C:/Users/3nigma/source/repos/spider/ml-agents/com.unity.ml-agents.extensions",
     "com.unity.multiplayer.center": "1.0.0",
     "com.unity.render-pipelines.high-definition": "17.0.3",
     "com.unity.timeline": "1.8.8",
