@@ -81,4 +81,6 @@ crashlytics-build.properties
 # Plastic Version Control
 **/.plastic/**
 
-# Version Control Metafiles
+# UV locks
+uv.lock
+__pycache__/
