@@ -6,7 +6,6 @@ from contextlib import contextmanager, suppress
 from dataclasses import dataclass
 import sys
 import subprocess
-from pathlib import Path
 from importlib import reload
 
 __version__ = "0.0.1"
@@ -24,11 +23,12 @@ HAS_RICH = False
 
 # Try importing Rich, but don't fail if not available
 try:
-    from rich.progress import Progress as RichProgress # type: ignore
-    from rich.progress import SpinnerColumn as RichSpinner # type: ignore
-    from rich.progress import TextColumn as RichText # type: ignore
-    from rich.console import Console as RichConsole # type: ignore
-    from rich.panel import Panel as RichPanel # type: ignore
+    from rich.progress import Progress as RichProgress  # type: ignore
+    from rich.progress import SpinnerColumn as RichSpinner  # type: ignore
+    from rich.progress import TextColumn as RichText  # type: ignore
+    from rich.console import Console  # type: ignore
+    from rich.panel import Panel as RichPanel  # type: ignore
+    RichConsole = Console
     HAS_RICH = True
 except ImportError:
     pass
@@ -36,7 +36,8 @@ except ImportError:
 
 @dataclass
 class Progress:
-    # Type-safe container for progress tracking
+    """Type-safe container for progress tracking."""
+
     progress: Any
     task: Optional[Any] = None
 
@@ -44,39 +45,42 @@ class Progress:
 class RichUI:
     """UI manager with rich formatting and fallback capabilities."""
 
+    def __init__(self) -> None:
+        """Initialize UI with Rich if available, or install it first."""
+        self._console = None
+        self._has_error = False
+
+        if not HAS_RICH and self._install_rich():
+            # Reload this module to get Rich imports
+            reload(sys.modules[__name__])
+
+        if HAS_RICH and RichConsole is not None:
+            self._console = RichConsole()
+
     @staticmethod
     def _install_rich() -> bool:
-        """Install Rich package if not present."""
+        """Install Rich package if not present.
+
+        Returns:
+            bool: True if installation successful, False otherwise
+        """
         try:
             subprocess.check_call(
                 [sys.executable, "-m", "pip", "install", "rich>=10.0.0"],
                 stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+                stderr=subprocess.DEVNULL)
             return True
         except subprocess.CalledProcessError:
             return False
 
-    def __init__(self) -> None:
-        """Initialize UI with Rich if available, or install it first."""
-        global HAS_RICH, RichConsole
-        self._console = None
-        self._has_error = False
-
-        if not HAS_RICH:
-            print("Installing Rich console for better UI...")
-            if self._install_rich():
-                # Reload this module to get Rich imports
-                reload(sys.modules[__name__])
-                from rich.console import Console as RichConsole  # type: ignore
-                HAS_RICH = True
-
-        self._console = RichConsole() if HAS_RICH else None
-
     def print_header(self, text: str) -> None:
-        # Display bordered header with title if rich is available
+        """Display bordered header with title if rich is available.
+
+        Args:
+            text (str): Header text to display
+        """
         if HAS_RICH and RichPanel and self._console:
-            self._console.print()  # Add empty line before panel
+            self._console.print()
             self._console.print(
                 RichPanel.fit(text,
                               border_style="blue",
@@ -86,7 +90,11 @@ class RichUI:
             print(f"\n{text}\n")
 
     def print_error(self, text: str) -> None:
-        # Display error messages in red if rich is available
+        """Display error messages in red if rich is available.
+
+        Args:
+            text (str): Error message to display
+        """
         if HAS_RICH and self._console:
             self._console.print(f"[red]Error:[/red] {text}")
         else:
@@ -94,7 +102,11 @@ class RichUI:
 
     @contextmanager
     def progress(self) -> Generator[Progress, None, None]:
-        # Create progress context with spinner and text
+        """Create progress context with spinner and text.
+
+        Yields:
+            Progress: Progress tracking object
+        """
         if HAS_RICH and RichProgress and RichSpinner and RichText:
             progress = RichProgress(
                 RichSpinner(),
@@ -111,7 +123,16 @@ class RichUI:
                     progress: Progress,
                     description: str,
                     total: Optional[int] = None) -> Progress:
-        # Add new task to progress tracking
+        """Add new task to progress tracking.
+
+        Args:
+            progress (Progress): Progress tracking object
+            description (str): Task description
+            total (Optional[int]): Total steps in task
+
+        Returns:
+            Progress: Updated progress object
+        """
         if HAS_RICH and progress.progress:
             task = progress.progress.add_task(description, total=total)
             progress.task = task
@@ -122,7 +143,13 @@ class RichUI:
                     progress: Progress,
                     advance: bool = False,
                     **kwargs) -> None:
-        # Update task progress or advance step
+        """Update task progress or advance step.
+
+        Args:
+            progress (Progress): Progress tracking object
+            advance (bool): Whether to advance the progress
+            **kwargs: Additional progress parameters
+        """
         if HAS_RICH and progress.progress and progress.task is not None:
             if advance:
                 progress.progress.advance(progress.task)
@@ -130,6 +157,10 @@ class RichUI:
                 progress.progress.update(progress.task, **kwargs)
 
     def complete_task(self, progress: Progress) -> None:
-        # Mark task as finished
+        """Mark task as finished.
+
+        Args:
+            progress (Progress): Progress tracking object
+        """
         if progress.task is not None:
             self.update_task(progress, completed=True)

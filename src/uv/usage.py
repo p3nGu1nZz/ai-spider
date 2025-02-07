@@ -7,11 +7,11 @@ __author__ = "p3nGu1nZz"
 __copyright__ = "Copyright (c) 2025 p3nGu1nZz"
 __license__ = "MIT"
 
+
 def get_command_list() -> List[str]:
     """Get list of available commands."""
-    return [
-        "  setup        Setup Python environment and dependencies"
-    ]
+    return ["  setup        Setup Python environment and dependencies"]
+
 
 def print_usage() -> None:
     """Print usage information for the Spider Game CLI."""
@@ -23,8 +23,10 @@ def print_usage() -> None:
     for cmd in get_command_list():
         print(cmd)
     print()
-    print("For more information, visit: https://github.com/p3nGu1nZz/ai-spider")
+    print(
+        "For more information, visit: https://github.com/p3nGu1nZz/ai-spider")
     print()
+
 
 def print_next_steps() -> None:
     """Print next steps after setup completion."""
@@ -32,5 +34,6 @@ def print_next_steps() -> None:
     print("1. Install the com.unity.ml-agents package in Unity")
     print("2. Import the Spider Agent from Package Manager")
     print("3. Start training: spider-game train --config configs/spider.yaml")
+
 
 __all__ = ['print_usage', 'print_next_steps', 'get_command_list']

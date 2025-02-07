@@ -3,6 +3,7 @@
 import sys
 from .ui import RichUI
 
+
 def main() -> int:
     """Initialize Spider Game development environment."""
     ui = RichUI()
@@ -10,6 +11,7 @@ def main() -> int:
     print("\nSpiders Ready! 🕷️")
     print("Run 'uv run spider-game' to start training your spiders!")
     return 0
+
 
 if __name__ == "__main__":
     sys.exit(main())
