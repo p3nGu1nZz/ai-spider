@@ -120,6 +120,12 @@ def main(force: bool = False) -> int:
             print(f"\n{error}\n")
             return 1
 
+        # Remove .git directory after successful clone
+        git_dir = ml_agents_path / ".git"
+        if git_dir.exists():
+            ui.print_success("🧹 Cleaning up repository...")
+            shutil.rmtree(git_dir, ignore_errors=True)
+
         print("\n🕷️ Spiders Ready!")
         print("🎮 Run 'spider-game' to start training your spiders!")
 

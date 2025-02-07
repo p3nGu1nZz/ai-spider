@@ -102,18 +102,21 @@ class RichUI:
             print(f"✨ {text}")
 
     @contextmanager
-    def progress(self) -> Generator[Progress, None, None]:
-        """Create progress context with spinner and text."""
+    def progress(self, unit: str = "files") -> Generator[Progress, None, None]:
+        """Create progress context with spinner and text.
+        
+        Args:
+            unit (str, optional): Unit to display in progress bar. Defaults to "files".
+        """
         if HAS_RICH and RichProgress and RichSpinner and RichText:
             from rich.progress import BarColumn, TaskProgressColumn
-            from rich.console import Group
 
             progress = RichProgress(
                 RichSpinner("dots"),
                 RichText("[progress.description]{task.description:<30}"),
                 BarColumn(bar_width=None),
                 TaskProgressColumn(),
-                RichText("[purple]{task.completed:>7,}/{task.total:,} files[/purple]"),
+                RichText(f"[purple]{{task.completed:>7,}}/{{task.total:,}} {unit}[/purple]"),
                 RichText("  "),
                 console=self._console,
                 expand=True,
