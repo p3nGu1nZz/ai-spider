@@ -39,22 +39,22 @@ def _install_pytorch(ui: RichUI) -> bool:
     ui.print_success("🕸️  Weaving PyTorch with CUDA support...")
     try:
         # Let UV handle the progress display
-        process = subprocess.run(
-            [
-                "uv", "pip", "install", "torch~=2.2.1",
-                "--index-url", "https://download.pytorch.org/whl/cu121"
-            ],
-            capture_output=True,
-            text=True
-        )
-        
+        process = subprocess.run([
+            "uv", "pip", "install", "torch~=2.2.1", "--index-url",
+            "https://download.pytorch.org/whl/cu121"
+        ],
+                                 capture_output=True,
+                                 text=True)
+
         # Clear screen and reprint header
         ui.print_header("Spider Game Development Environment")
         ui.print_success("🕸️  Weaving PyTorch with CUDA support...")
         ui.print_success("🪄  PyTorch CUDA enchantment complete")
         return True
     except subprocess.CalledProcessError as e:
-        ui.print_error(f"Failed to install PyTorch via UV: {e.stderr if e.stderr else str(e)}")
+        ui.print_error(
+            f"Failed to install PyTorch via UV: {e.stderr if e.stderr else str(e)}"
+        )
         return False
 
 
@@ -62,63 +62,57 @@ def _install_grpc(ui: RichUI) -> bool:
     """Install GRPC libraries, particularly important for macOS."""
     if sys.platform != "darwin":  # Only needed for macOS
         return True
-    
+
     ui.print_success("🪄  Conjuring GRPC libraries...")
     try:
-        process = subprocess.run(
-            ["uv", "pip", "install", "grpcio"],
-            capture_output=True,
-            text=True
-        )
+        process = subprocess.run(["uv", "pip", "install", "grpcio"],
+                                 capture_output=True,
+                                 text=True)
         ui.print_success("✨  GRPC enchantment complete")
         return True
     except subprocess.CalledProcessError as e:
-        ui.print_error(f"Failed to install GRPC: {e.stderr if e.stderr else str(e)}")
+        ui.print_error(
+            f"Failed to install GRPC: {e.stderr if e.stderr else str(e)}")
         return False
 
 
 def _install_mlagents(ui: RichUI) -> bool:
     """Install ML-Agents from local repository."""
     ui.print_success("🕷️  Summoning ML-Agents packages...")
-    
+
     current_dir = os.getcwd()
     ml_agents_path = Path("ml-agents")
-    
+
     try:
         # Change to ml-agents directory
         os.chdir(ml_agents_path)
-        
+
         # Install ml-agents-envs first
         ui.print_success("🕸️  Weaving ml-agents-envs...")
-        subprocess.run(
-            ["uv", "pip", "install", "./ml-agents-envs"],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        
+        subprocess.run(["uv", "pip", "install", "./ml-agents-envs"],
+                       check=True,
+                       capture_output=True,
+                       text=True)
+
         # Install ml-agents second
         ui.print_success("🕸️  Weaving ml-agents core...")
-        subprocess.run(
-            ["uv", "pip", "install", "./ml-agents"],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        
+        subprocess.run(["uv", "pip", "install", "./ml-agents"],
+                       check=True,
+                       capture_output=True,
+                       text=True)
+
         # Verify installation
-        subprocess.run(
-            ["mlagents-learn", "--help"],
-            check=True,
-            capture_output=True,
-            text=True
-        )
-        
+        subprocess.run(["mlagents-learn", "--help"],
+                       check=True,
+                       capture_output=True,
+                       text=True)
+
         ui.print_success("🪄  ML-Agents enchantment complete")
         return True
-        
+
     except subprocess.CalledProcessError as e:
-        ui.print_error(f"Failed to install ML-Agents: {e.stderr if e.stderr else str(e)}")
+        ui.print_error(
+            f"Failed to install ML-Agents: {e.stderr if e.stderr else str(e)}")
         return False
     finally:
         # Always return to original directory
@@ -129,20 +123,18 @@ def install_dependencies() -> bool:
     """Install required packages using UV."""
     try:
         # First install base dependencies
-        subprocess.check_call(
-            ["uv", "pip", "install", "psutil", "GitPython"],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL
-        )
+        subprocess.check_call(["uv", "pip", "install", "psutil", "GitPython"],
+                              stdout=subprocess.DEVNULL,
+                              stderr=subprocess.DEVNULL)
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         try:
             # Fallback to pip if UV not available
-            subprocess.check_call(
-                [sys.executable, "-m", "pip", "install", "psutil", "GitPython"],
-                stdout=subprocess.DEVNULL,
-                stderr=subprocess.DEVNULL
-            )
+            subprocess.check_call([
+                sys.executable, "-m", "pip", "install", "psutil", "GitPython"
+            ],
+                                  stdout=subprocess.DEVNULL,
+                                  stderr=subprocess.DEVNULL)
             return True
         except subprocess.CalledProcessError:
             return False
