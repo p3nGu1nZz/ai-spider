@@ -36,7 +36,7 @@ def check_existing_setup() -> bool:
 
 def _install_pytorch(ui: RichUI) -> bool:
     """Install PyTorch with CUDA support using UV."""
-    ui.print_success("🔥 Installing PyTorch with CUDA support...")
+    ui.print_success("🕸️  Weaving PyTorch with CUDA support...")
     try:
         # Let UV handle the progress display
         process = subprocess.run(
@@ -50,8 +50,8 @@ def _install_pytorch(ui: RichUI) -> bool:
         
         # Clear screen and reprint header
         ui.print_header("Spider Game Development Environment")
-        ui.print_success("🔥 Installing PyTorch with CUDA support...")
-        ui.print_success("🔮 PyTorch CUDA installed successfully")
+        ui.print_success("🕸️  Weaving PyTorch with CUDA support...")
+        ui.print_success("🪄  PyTorch CUDA enchantment complete")
         return True
     except subprocess.CalledProcessError as e:
         ui.print_error(f"Failed to install PyTorch via UV: {e.stderr if e.stderr else str(e)}")
@@ -63,18 +63,66 @@ def _install_grpc(ui: RichUI) -> bool:
     if sys.platform != "darwin":  # Only needed for macOS
         return True
     
-    ui.print_success("📦 Installing GRPC libraries...")
+    ui.print_success("🪄  Conjuring GRPC libraries...")
     try:
         process = subprocess.run(
             ["uv", "pip", "install", "grpcio"],
             capture_output=True,
             text=True
         )
-        ui.print_success("✨ GRPC libraries installed successfully")
+        ui.print_success("✨  GRPC enchantment complete")
         return True
     except subprocess.CalledProcessError as e:
         ui.print_error(f"Failed to install GRPC: {e.stderr if e.stderr else str(e)}")
         return False
+
+
+def _install_mlagents(ui: RichUI) -> bool:
+    """Install ML-Agents from local repository."""
+    ui.print_success("🕷️  Summoning ML-Agents packages...")
+    
+    current_dir = os.getcwd()
+    ml_agents_path = Path("ml-agents")
+    
+    try:
+        # Change to ml-agents directory
+        os.chdir(ml_agents_path)
+        
+        # Install ml-agents-envs first
+        ui.print_success("🕸️  Weaving ml-agents-envs...")
+        subprocess.run(
+            ["uv", "pip", "install", "./ml-agents-envs"],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        
+        # Install ml-agents second
+        ui.print_success("🕸️  Weaving ml-agents core...")
+        subprocess.run(
+            ["uv", "pip", "install", "./ml-agents"],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        
+        # Verify installation
+        subprocess.run(
+            ["mlagents-learn", "--help"],
+            check=True,
+            capture_output=True,
+            text=True
+        )
+        
+        ui.print_success("🪄  ML-Agents enchantment complete")
+        return True
+        
+    except subprocess.CalledProcessError as e:
+        ui.print_error(f"Failed to install ML-Agents: {e.stderr if e.stderr else str(e)}")
+        return False
+    finally:
+        # Always return to original directory
+        os.chdir(current_dir)
 
 
 def install_dependencies() -> bool:
@@ -121,12 +169,12 @@ def main(force: bool = False) -> int:
     # Activate venv if it exists
     if Path(".venv").exists():
         activate_venv()
-        ui.print_success("🔄 Using virtual environment")
+        ui.print_success("🪄  Virtual environment enchanted")
 
     # If force is true, remove existing ml-agents directory
     ml_agents_path = Path("ml-agents")
     if force and ml_agents_path.exists():
-        ui.print_success("🔄 Removing existing ML-Agents repository...")
+        ui.print_success("✨  Vanishing existing ML-Agents repository...")
         shutil.rmtree(ml_agents_path, ignore_errors=True)
 
     # Always attempt clone if directory was removed or doesn't exist
@@ -143,14 +191,18 @@ def main(force: bool = False) -> int:
             print(f"\n{error}\n")
             return 1
 
+        # Install ML-Agents packages
+        if not _install_mlagents(ui):
+            return 1
+
         # Remove .git directory after successful clone
         git_dir = ml_agents_path / ".git"
         if git_dir.exists():
-            ui.print_success("🧹 Cleaning up repository...")
+            ui.print_success("🧹  Cleaning magical residue...")
             shutil.rmtree(git_dir, ignore_errors=True)
 
-        print("\n🕷️ Spiders Ready!")
-        print("🎮 Run 'spider-game' to start training your spiders!")
+        print("\n🕷️  Spider's Web Complete!")
+        print("🕸️  Cast 'spider-game' to begin training!")
 
     return 0
 
