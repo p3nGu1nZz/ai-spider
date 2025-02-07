@@ -100,6 +100,17 @@ class RichUI:
         else:
             print(f"Error: {text}")
 
+    def print_success(self, text: str) -> None:
+        """Display success messages in green if rich is available.
+
+        Args:
+            text (str): Success message to display
+        """
+        if HAS_RICH and self._console:
+            self._console.print(f"[green]✓[/green] {text}")
+        else:
+            print(f"✓ {text}")
+
     @contextmanager
     def progress(self) -> Generator[Progress, None, None]:
         """Create progress context with spinner and text.
@@ -164,3 +175,19 @@ class RichUI:
         """
         if progress.task is not None:
             self.update_task(progress, completed=True)
+
+    def confirm(self, question: str) -> bool:
+        """Ask user for confirmation.
+
+        Args:
+            question (str): Question to display
+
+        Returns:
+            bool: True if user confirmed, False otherwise
+        """
+        if HAS_RICH and self._console:
+            self._console.print(f"\n[yellow]{question} (y/n)[/yellow]")
+        else:
+            print(f"\n{question} (y/n)")
+
+        return input().lower().strip() == 'y'

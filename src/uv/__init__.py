@@ -11,6 +11,7 @@ Core functionality:
 from .ui import RichUI, Progress
 from .setup import main as setup
 from .usage import print_usage, print_next_steps
+from .git import clone_repository
 
 __version__ = "0.0.1"
 __author__ = "p3nGu1nZz"
@@ -22,9 +23,12 @@ __all__ = [
     # UI Components
     "RichUI",
     "Progress",
-    
+
     # Core Functions
     "setup",
     "print_usage",
     "print_next_steps",
+
+    # Git Operations
+    "clone_repository",
 ]
