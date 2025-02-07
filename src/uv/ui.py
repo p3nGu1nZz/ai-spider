@@ -74,55 +74,44 @@ class RichUI:
             return False
 
     def print_header(self, text: str) -> None:
-        """Display bordered header with title if rich is available.
-
-        Args:
-            text (str): Header text to display
-        """
+        """Display bordered header with title if rich is available."""
         if HAS_RICH and RichPanel and self._console:
-            self._console.print()
+            self._console.clear()
             self._console.print(
-                RichPanel.fit(text,
-                              border_style="blue",
-                              padding=(1, 2),
-                              title="AI Spider Setup"))
+                RichPanel(text,
+                         expand=True,
+                         border_style="blue",
+                         padding=(1, 2),
+                         title="🎮 AI Spider Game Setup"))
         else:
+            # For non-rich environments, try to clear using ANSI
+            print("\033[2J\033[H", end="")
             print(f"\n{text}\n")
 
     def print_error(self, text: str) -> None:
-        """Display error messages in red if rich is available.
-
-        Args:
-            text (str): Error message to display
-        """
         if HAS_RICH and self._console:
-            self._console.print(f"[red]Error:[/red] {text}")
+            self._console.print(f"❌ [red]Error:[/red] {text}")
         else:
-            print(f"Error: {text}")
+            print(f"❌ Error: {text}")
 
     def print_success(self, text: str) -> None:
-        """Display success messages in green if rich is available.
-
-        Args:
-            text (str): Success message to display
-        """
         if HAS_RICH and self._console:
-            self._console.print(f"[green]✓[/green] {text}")
+            self._console.print(f"✨ [green]{text}[/green]")
         else:
-            print(f"✓ {text}")
+            print(f"✨ {text}")
 
     @contextmanager
     def progress(self) -> Generator[Progress, None, None]:
-        """Create progress context with spinner and text.
-
-        Yields:
-            Progress: Progress tracking object
-        """
+        """Create progress context with spinner and text."""
         if HAS_RICH and RichProgress and RichSpinner and RichText:
             progress = RichProgress(
-                RichSpinner(),
+                RichSpinner("dots"),
                 RichText("[progress.description]{task.description}"),
+                RichProgress.get_default_columns()[2],
+                RichText("[purple]{task.completed:,}/{task.total:,} files[/purple]"),
                 console=self._console,
+                expand=True,
+                transient=True
             )
             with progress:
                 yield Progress(progress=progress)
@@ -133,19 +122,20 @@ class RichUI:
     def create_task(self,
                     progress: Progress,
                     description: str,
-                    total: Optional[int] = None) -> Progress:
-        """Add new task to progress tracking.
-
-        Args:
-            progress (Progress): Progress tracking object
-            description (str): Task description
-            total (Optional[int]): Total steps in task
-
-        Returns:
-            Progress: Updated progress object
-        """
+                    total: Optional[int] = None,
+                    **kwargs) -> Progress:
+        """Add new task to progress tracking."""
         if HAS_RICH and progress.progress:
-            task = progress.progress.add_task(description, total=total)
+            task_kwargs = {
+                'description': description,
+                'total': total,
+                'visible': True
+            }
+            # Only add other kwargs that aren't already defined
+            task_kwargs.update({k:v for k,v in kwargs.items() 
+                              if k not in task_kwargs})
+            
+            task = progress.progress.add_task(**task_kwargs)
             progress.task = task
             return progress
         return Progress(progress=None)

@@ -18,17 +18,11 @@ __author__ = "p3nGu1nZz"
 __copyright__ = "Copyright (c) 2025 p3nGu1nZz"
 __license__ = "MIT"
 
-# Core functionality
 __all__ = [
-    # UI Components
     "RichUI",
     "Progress",
-
-    # Core Functions
     "setup",
     "print_usage",
     "print_next_steps",
-
-    # Git Operations
     "clone_repository",
 ]
