@@ -34,10 +34,34 @@ def check_existing_setup() -> bool:
     return venv_path.exists() or mlagents_path.exists()
 
 
+def _install_pytorch(ui: RichUI) -> bool:
+    """Install PyTorch with CUDA support using UV."""
+    ui.print_success("🔥 Installing PyTorch with CUDA support...")
+    try:
+        # Let UV handle the progress display
+        process = subprocess.run(
+            [
+                "uv", "pip", "install", "torch~=2.2.1",
+                "--index-url", "https://download.pytorch.org/whl/cu121"
+            ],
+            capture_output=True,
+            text=True
+        )
+        
+        # Clear screen and reprint header
+        ui.print_header("Spider Game Development Environment")
+        ui.print_success("🔥 Installing PyTorch with CUDA support...")
+        ui.print_success("🔮 PyTorch CUDA installed successfully")
+        return True
+    except subprocess.CalledProcessError as e:
+        ui.print_error(f"Failed to install PyTorch via UV: {e.stderr if e.stderr else str(e)}")
+        return False
+
+
 def install_dependencies() -> bool:
     """Install required packages using UV."""
     try:
-        # Use UV install command since we're in a UV environment
+        # First install base dependencies
         subprocess.check_call(
             ["uv", "pip", "install", "psutil", "GitPython"],
             stdout=subprocess.DEVNULL,
@@ -65,6 +89,10 @@ def main(force: bool = False) -> int:
     # Install dependencies first
     if not install_dependencies():
         ui.print_error("Failed to install required packages")
+        return 1
+
+    # Install PyTorch with CUDA
+    if not _install_pytorch(ui):
         return 1
 
     # Activate venv if it exists

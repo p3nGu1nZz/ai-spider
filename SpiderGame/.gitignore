@@ -82,3 +82,5 @@ crashlytics-build.properties
 **/.plastic/**
 
 # Version Control Metafiles
+SpiderGame/**/*.meta
+SpiderGame/**/*-lock.json

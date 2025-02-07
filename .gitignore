@@ -85,3 +85,4 @@ crashlytics-build.properties
 uv.lock
 __pycache__/
 SpiderGame/**/*.meta
+SpiderGame/**/*-lock.json
