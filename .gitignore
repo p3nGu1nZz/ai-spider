@@ -87,3 +87,4 @@ __pycache__/
 SpiderGame/**/*.meta
 SpiderGame/**/*-lock.json
 ml-agents
+results
