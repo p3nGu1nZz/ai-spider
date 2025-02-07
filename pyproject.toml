@@ -29,6 +29,7 @@ dependencies = [
     "colorama>=0.4.4",
     "click>=8.0.0",
     "GitPython>=3.1.40",
+    "psutil>=5.9.0",
 ]
 
 [project.optional-dependencies]

@@ -106,18 +106,19 @@ class RichUI:
         """Create progress context with spinner and text."""
         if HAS_RICH and RichProgress and RichSpinner and RichText:
             from rich.progress import BarColumn, TaskProgressColumn
+            from rich.console import Group
 
             progress = RichProgress(
                 RichSpinner("dots"),
                 RichText("[progress.description]{task.description:<30}"),
                 BarColumn(bar_width=None),
                 TaskProgressColumn(),
-                RichText(
-                    "[purple]{task.completed:>7,}/{task.total:,} files[/purple]"
-                ),
+                RichText("[purple]{task.completed:>7,}/{task.total:,} files[/purple]"),
+                RichText("  "),
                 console=self._console,
                 expand=True,
-                transient=True)
+                transient=True
+            )
             with progress:
                 yield Progress(progress=progress)
         else:

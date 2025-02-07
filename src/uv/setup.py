@@ -3,6 +3,7 @@
 import sys
 import os
 import shutil
+import subprocess
 from pathlib import Path
 from .ui import RichUI
 from .git import clone_repository
@@ -33,10 +34,38 @@ def check_existing_setup() -> bool:
     return venv_path.exists() or mlagents_path.exists()
 
 
+def install_dependencies() -> bool:
+    """Install required packages using UV."""
+    try:
+        # Use UV install command since we're in a UV environment
+        subprocess.check_call(
+            ["uv", "pip", "install", "psutil", "GitPython"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL
+        )
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        try:
+            # Fallback to pip if UV not available
+            subprocess.check_call(
+                [sys.executable, "-m", "pip", "install", "psutil", "GitPython"],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            return True
+        except subprocess.CalledProcessError:
+            return False
+
+
 def main(force: bool = False) -> int:
     """Initialize Spider Game development environment."""
     ui = RichUI()
     ui.print_header("Spider Game Development Environment")
+
+    # Install dependencies first
+    if not install_dependencies():
+        ui.print_error("Failed to install required packages")
+        return 1
 
     # Activate venv if it exists
     if Path(".venv").exists():
