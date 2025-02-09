@@ -7,36 +7,42 @@ using Random = UnityEngine.Random;
 
 namespace SpiderGame.SpiderAgent
 {
-    [RequireComponent(typeof(JointDriveController))] // Required to set joint forces
+    /// <summary>
+    /// Spider Agent that learns to walk using ML-Agents
+    /// </summary>
+    /// <remarks>
+    /// The agent learns to:
+    /// - Match a target walking speed
+    /// - Face the direction it's moving
+    /// - Maintain upright orientation
+    /// - Navigate towards targets
+    /// </remarks>
+    [RequireComponent(typeof(JointDriveController))]
     public class SpiderAgent : Agent
     {
         [Header("Reward Settings")]
         [SerializeField]
         [Tooltip("Episode will end if accumulated reward falls below this threshold")]
-        private float minRewardThreshold = -1000f;
+        private float minRewardThreshold = -100f;
 
         [Header("Walk Speed")]
         [Range(0.1f, m_maxWalkingSpeed)]
         [SerializeField]
-        [Tooltip(
-            "The speed the agent will try to match.\n\n" +
-            "TRAINING:\n" +
-            "For VariableSpeed envs, this value will randomize at the start of each training episode.\n" +
-            "Otherwise the agent will try to match the speed set here.\n\n" +
-            "INFERENCE:\n" +
-            "During inference, VariableSpeed agents will modify their behavior based on this value " +
-            "whereas the CrawlerDynamic & CrawlerStatic agents will run at the speed specified during training "
-        )]
-        //The walking speed to try and achieve
+        [Tooltip("The speed the agent will try to match")]
         private float m_TargetWalkingSpeed = m_maxWalkingSpeed;
 
-        const float m_maxWalkingSpeed = 15; //The max walking speed
+        const float m_maxWalkingSpeed = 20;
 
-        //The current target walking speed. Clamped because a value of zero will cause NaNs
         public float TargetWalkingSpeed
         {
             get { return m_TargetWalkingSpeed; }
             set { m_TargetWalkingSpeed = Mathf.Clamp(value, .1f, m_maxWalkingSpeed); }
+        }
+
+        void Start()
+        {
+            // Validate speeds
+            m_TargetWalkingSpeed = Mathf.Clamp(m_TargetWalkingSpeed, 0.1f, m_maxWalkingSpeed);
         }
 
         //The direction an agent will walk during training.
@@ -64,6 +70,9 @@ namespace SpiderGame.SpiderAgent
 
         public override void Initialize()
         {
+            // Initialize target speed before anything else
+            m_TargetWalkingSpeed = m_maxWalkingSpeed;
+
             SpawnTarget(TargetPrefab, transform.position); //spawn target
 
             m_OrientationCube = GetComponentInChildren<OrientationCubeController>();
@@ -106,9 +115,6 @@ namespace SpiderGame.SpiderAgent
             body.rotation = Quaternion.Euler(0, Random.Range(0.0f, 360.0f), 0);
 
             UpdateOrientationObjects();
-
-            //Set our goal walking speed
-            TargetWalkingSpeed = Random.Range(0.1f, m_maxWalkingSpeed);
         }
 
         /// <summary>
@@ -131,6 +137,9 @@ namespace SpiderGame.SpiderAgent
         public override void CollectObservations(VectorSensor sensor)
         {
             var cubeForward = m_OrientationCube.transform.forward;
+
+            // Add normalized target speed to observations
+            sensor.AddObservation(TargetWalkingSpeed / m_maxWalkingSpeed);
 
             //velocity we want to match
             var velGoal = cubeForward * TargetWalkingSpeed;
@@ -192,28 +201,47 @@ namespace SpiderGame.SpiderAgent
             bpDict[leg3Lower].SetJointStrength(continuousActions[++i]);
         }
 
-        void FixedUpdate()
+        /// <summary>
+        /// Calculates the combined reward for movement and orientation
+        /// </summary>
+        private float CalculateReward()
         {
-            UpdateOrientationObjects();
-
             var cubeForward = m_OrientationCube.transform.forward;
 
-            // Set reward for this step according to mixture of the following elements.
             // a. Match target speed
-            //This reward will approach 1 if it matches perfectly and approach zero as it deviates
             var matchSpeedReward = GetMatchingVelocityReward(cubeForward * TargetWalkingSpeed, GetAvgVelocity());
 
             // b. Rotation alignment with target direction.
-            //This reward will approach 1 if it faces the target direction perfectly and approach zero as it deviates
             var lookAtTargetReward = (Vector3.Dot(cubeForward, body.forward) + 1) * .5F;
 
-            AddReward(matchSpeedReward * lookAtTargetReward);
+            float finalReward = matchSpeedReward * lookAtTargetReward;
 
-            // Check if accumulated reward is below threshold
+            // Combine rewards
+            return finalReward;
+        }
+
+        void FixedUpdate()
+        {
+            UpdateOrientationObjects();
+            AddReward(CalculateReward());
+
             if (GetCumulativeReward() <= minRewardThreshold)
             {
                 EndEpisode();
             }
+        }
+
+        /// <summary>
+        /// Normalized value of the difference in actual speed vs goal walking speed.
+        /// </summary>
+        public float GetMatchingVelocityReward(Vector3 velocityGoal, Vector3 actualVelocity)
+        {
+            //distance between our actual velocity and goal velocity
+            var velDeltaMagnitude = Mathf.Clamp(Vector3.Distance(actualVelocity, velocityGoal), 0, TargetWalkingSpeed);
+
+            //return the value on a declining sigmoid shaped curve that decays from 1 to 0
+            //This reward will approach 1 if it matches perfectly and approach zero as it deviates
+            return Mathf.Pow(1 - Mathf.Pow(velDeltaMagnitude / TargetWalkingSpeed, 2), 2);
         }
 
         /// <summary>
@@ -248,19 +276,6 @@ namespace SpiderGame.SpiderAgent
 
             avgVel = velSum / numOfRb;
             return avgVel;
-        }
-
-        /// <summary>
-        /// Normalized value of the difference in actual speed vs goal walking speed.
-        /// </summary>
-        public float GetMatchingVelocityReward(Vector3 velocityGoal, Vector3 actualVelocity)
-        {
-            //distance between our actual velocity and goal velocity
-            var velDeltaMagnitude = Mathf.Clamp(Vector3.Distance(actualVelocity, velocityGoal), 0, TargetWalkingSpeed);
-
-            //return the value on a declining sigmoid shaped curve that decays from 1 to 0
-            //This reward will approach 1 if it matches perfectly and approach zero as it deviates
-            return Mathf.Pow(1 - Mathf.Pow(velDeltaMagnitude / TargetWalkingSpeed, 2), 2);
         }
 
         /// <summary>
